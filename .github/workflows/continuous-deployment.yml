@@ -42,13 +42,20 @@ jobs:
         extension-csv: mbstring, bcmath
     - name: Composer install
       run: composer install
-    - name: Setup Deployer
-      uses: atymic/deployer-php-action@master
+    - name: Copy repository contents via scp
+      if: github.ref == 'refs/heads/develop'
+      uses: appleboy/scp-action@master
+      env:
+        HOST: ${{ secrets.SSH_KNOWN_HOSTS }}
+        USERNAME: ${{ secrets.SSH_KNOWN_USERNAME }}
+        PORT: ${{ secrets.SSH_KNOWN_PORT }}
+        KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-        ssh-known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }} 
+        source: "."
+        target: "/home/ksp-backend-test"
     - name: Deploy to Prod
       run: |
+        mv /home/ksp-backend-test/public /var/www/example.com/html
         whoami
         pwd
         ls -al
