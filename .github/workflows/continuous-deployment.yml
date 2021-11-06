@@ -55,7 +55,7 @@ jobs:
         target: "/home/ksp-backend-test"
     - name: Deploy to Prod
       run: |
-        mv /home/ksp-backend-test/public /var/www/example.com/html
+        mv /home/ksp-backend-test/public/. /var/www/example.com/html
         whoami
         pwd
         ls -al
