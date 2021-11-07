@@ -6,10 +6,11 @@ on:
       main
 
 jobs:
-  phpunit:
-    runs-on: ubuntu:latest
-    container: 
-      image: kirschbaumdevelopment/laravel-test-runner:7.3
+  phpunit-php74:
+    name: PHP 7.4
+    runs-on: ubuntu-latest
+    container:
+      image: kirschbaumdevelopment/laravel-test-runner:7.4
 
     services:
       mysql:
@@ -19,21 +20,21 @@ jobs:
           MYSQL_DATABASE: test
         ports:
           - 3306:3306
-        options: --name mydb --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
-    
-    steps:
-    - uses: actions@checkout@v1
-      with:
-        fetch-depth: 1
-      
-    - name: Install composer dependencies
-      run: |
-        composer install --no-scripts
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
 
-    - name: Prepare laravel Application
-      run: |
-        cp env.ci .env
-        php artisan key:generate
-    
-    - name: Run Testsuite
-      run: vendor/bin/phpunit tests/
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Install composer dependencies
+        run: |
+          composer install --prefer-dist --no-interaction --no-scripts
+
+      - name: Prepare laravel Application
+        run: |
+          cp env.ci .env
+          php artisan key:generate
+
+      - name: Run Testsuite
+        run: vendor/bin/phpunit tests/
