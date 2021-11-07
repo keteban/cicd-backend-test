@@ -2,16 +2,27 @@ name: Continuous Deployment
 
 on: 
   push:
-    branches:
-      - develop
+    branches: 
+      - main
 
 jobs:
   build:
     runs-on: ubuntu:latest
-    if: github.ref == 'refs/heads/develop'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: '16'
+          check-latest: true
+
+      - name: Install NPM dependencies
+        run: npm install
+
+      - name: Compile assets for production
+        run: npm run production
       
       - name: Setup PHP
         uses: shivammathur/setup-php@master
@@ -19,49 +30,30 @@ jobs:
           php-version: 8
           coverage: none
       
-      - name: Use composer dependencies cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/composer
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock')}}
-          restore-keys: ${{ runner.os }}-composer-
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
+      - name: Install Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       
-      - name: Use npm dependencies cache
-        
+      - name: Generate key
+        run: php artisan key:generate
+
   deploy:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    # Note tht this needs build-js to completed succesfully
-    needs: [build-js]
-    if: github.ref == 'refs/heads/develop'
-    steps:
-    - uses: actions/checkout@v1
-    - name: Download build assets
-      uses: actions/download-artifact@v1
-      with:
-        name: assets
-        path: public
-    - name: Setup PHP
-      uses: shivammathur/setup-php@master
-      with:
-        php-version: 7.4
-        extension-csv: mbstring, bcmath
-    - name: Composer install
-      run: composer install
-    - name: Copy repository contents via scp
-      if: github.ref == 'refs/heads/develop'
-      uses: appleboy/scp-action@master
-      env:
-        HOST: ${{ secrets.SSH_KNOWN_HOST }}
-        USERNAME: ${{ secrets.SSH_KNOWN_USERNAME }}
-        PORT: ${{ secrets.SSH_KNOWN_PORT }}
-        KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      with:
-        source: "."
-        target: "/home/ksp-backend-test"
-    - name: Deploy to Prod
-      run: |
-        whoami
-        pwd
-        ls -al
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deployment
+        uses: appleboy/ssh-action@main
+        with:
+          host: ${{ secrets.SSH_KNOWN_HOST }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/example.com/html
+            git checkout -f 
+            git pull
