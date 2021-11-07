@@ -6,22 +6,28 @@ on:
       - develop
 
 jobs:
-  build-js:
-    name: Build Js/Css
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu:latest
+    if: github.ref == 'refs/heads/develop'
     steps:
-      - uses: actions/checkout@v1
-      - name: Npm Build
-        run: |
-          npm install
-          npm run prod
-          cat public/mix-manifest.json
-      - name: Upload build files
-        uses: actions/upload-artifact@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@master
         with:
-          name: assets
-          path: public
-  
+          php-version: 8
+          coverage: none
+      
+      - name: Use composer dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/composer
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock')}}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      - name: Use npm dependencies cache
+        
   deploy:
     name: Deploy to Staging
     runs-on: ubuntu-latest
