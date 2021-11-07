@@ -8,7 +8,8 @@ on:
 jobs:
   phpunit:
     runs-on: ubuntu:latest
-    container: kirschbaumdevelopment/laravel-test-runner:7.3
+    container: 
+      image: kirschbaumdevelopment/laravel-test-runner:7.3
 
     services:
       mysql:
