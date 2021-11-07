@@ -33,7 +33,7 @@ jobs:
 
       - name: Prepare laravel Application
         run: |
-          cp env.ci .env
+          cp .env.ci .env
           php artisan key:generate
 
       - name: Run Testsuite
