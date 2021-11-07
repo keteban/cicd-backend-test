@@ -53,7 +53,7 @@ jobs:
         with:
           host: ${{ secrets.SSH_KNOWN_HOST }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          username: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.SSH_KNOWN_USERNAME }}
           script: |
             cd /var/www/example.com/html
             git checkout -f 
