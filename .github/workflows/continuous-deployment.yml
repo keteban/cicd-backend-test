@@ -58,6 +58,9 @@ jobs:
         with:
           source: "."
           target: "/home/ksp-backend-test"
+      
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
       - name: Deployment
         uses: appleboy/ssh-action@master
@@ -67,4 +70,7 @@ jobs:
           username: ${{ secrets.SSH_KNOWN_USERNAME }}
           script: |
             cd /home/ksp-backend-test 
+            php -r "file_exists('.env') || copy('.env.ci', '.env');"
+            cp -r /home/ksp-backend-test/. /var/www/example.com
+            cd /var/www/example.com
             ls -al
