@@ -28,6 +28,16 @@ jobs:
         git commit -m "Build front-end assets"
         git push -f origin deploy
     
+    - name: Deploy to production
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_KNOWN_HOST }}
+        USERNAME: ${{ secrets.SSH_KNOWN_USERNAME }}
+        PORT: ${{ secrets.SSH_KNOWN_PORT }}
+        KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+         rm -R /var/www/api.keteban.com
+    
     - name: Copy repository contents via scp
       uses: appleboy/scp-action@master
       env:
@@ -46,4 +56,14 @@ jobs:
         USERNAME: ${{ secrets.SSH_KNOWN_USERNAME }}
         PORT: ${{ secrets.SSH_KNOWN_PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: 'cd /var/www/api.keteban.com && ./server_deploy.sh'
+        script: |
+         cd /var/www/api.keteban.com
+         rm -rf .git
+         chown -R $USER:$USER /var/www/api.keteban.com/
+         chmod -R 755 /var/www
+         chmod -R 775 storage bootstrap/cache
+         chown -R $USER:www-data storage bootstrap/cache
+         composer install
+         php artisan key:generate
+         php artisan migrate --force
+         php artisan optimize
