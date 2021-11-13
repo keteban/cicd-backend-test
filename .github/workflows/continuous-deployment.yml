@@ -46,4 +46,8 @@ jobs:
         USERNAME: ${{ secrets.SSH_KNOWN_USERNAME }}
         PORT: ${{ secrets.SSH_KNOWN_PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: 'cd /var/www/api.keteban.com && ./server_deploy.sh'
+        script: |
+         chown -R $USER:$USER /var/www/api.keteban.com/
+         chmod -R 755 /var/www
+         cd /var/www/api.keteban.com 
+         ./server_deploy.sh
