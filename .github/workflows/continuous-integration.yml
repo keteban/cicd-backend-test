@@ -1,0 +1,40 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      develop
+
+jobs:
+  phpunit-php74:
+    name: PHP 7.4
+    runs-on: ubuntu-latest
+    container:
+      image: kirschbaumdevelopment/laravel-test-runner:7.4
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Install composer dependencies
+        run: |
+          composer install --prefer-dist --no-interaction --no-scripts
+
+      - name: Prepare laravel Application
+        run: |
+          cp .env.ci .env
+          php artisan key:generate
+
+      - name: Run Testsuite
+        run: vendor/bin/phpunit tests/

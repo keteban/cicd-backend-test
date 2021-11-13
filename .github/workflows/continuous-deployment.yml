@@ -1,61 +1,38 @@
-name: Continuous Deployment
-
-on: 
+name: CD
+ 
+on:
   push:
-    branches:
+    branches: 
       - develop
-
+ 
 jobs:
-  build-js:
-    name: Build Js/Css
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Npm Build
-        run: |
-          npm install
-          npm run prod
-          cat public/mix-manifest.json
-      - name: Upload build files
-        uses: actions/upload-artifact@v1
-        with:
-          name: assets
-          path: public
-  
   deploy:
-    name: Deploy to Staging
     runs-on: ubuntu-latest
-    # Note tht this needs build-js to completed succesfully
-    needs: [build-js]
-    if: github.ref == 'refs/heads/develop'
     steps:
-    - uses: actions/checkout@v1
-    - name: Download build assets
-      uses: actions/download-artifact@v1
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+        
+    - name: Set up Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
       with:
-        name: assets
-        path: public
-    - name: Setup PHP
-      uses: shivammathur/setup-php@master
+        node-version: ${{ matrix.node-version }}
+        
+    - run: npm install
+    - run: npm run production
+    - name: Commit built assets
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git checkout -B deploy
+        git add -f public/
+        git commit -m "Build front-end assets"
+        git push -f origin deploy
+        
+    - name: Deploy to production
+      uses: appleboy/ssh-action@master
       with:
-        php-version: 7.4
-        extension-csv: mbstring, bcmath
-    - name: Composer install
-      run: composer install
-    - name: Copy repository contents via scp
-      if: github.ref == 'refs/heads/develop'
-      uses: appleboy/scp-action@master
-      env:
-        HOST: ${{ secrets.SSH_KNOWN_HOST }}
+        host: ${{ secrets.SSH_KNOWN_HOST }}
         USERNAME: ${{ secrets.SSH_KNOWN_USERNAME }}
         PORT: ${{ secrets.SSH_KNOWN_PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      with:
-        source: "."
-        target: "/home/ksp-backend-test"
-    - name: Deploy to Prod
-      run: |
-        whoami
-        pwd
-        ls -al
-
+        script: 'cd /var/www/api.keteban.com && ./server_deploy.sh'
