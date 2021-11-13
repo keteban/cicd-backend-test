@@ -58,6 +58,7 @@ jobs:
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
          cd /var/www/api.keteban.com
+         mv .env.ci .env
          rm -rf .git
          chown -R $USER:$USER /var/www/api.keteban.com/
          chmod -R 755 /var/www
