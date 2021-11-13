@@ -47,7 +47,16 @@ jobs:
         PORT: ${{ secrets.SSH_KNOWN_PORT }}
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
+         cd /var/www/api.keteban.com
+         chmod -R 775 storage bootstrap/cache
+         chown -R $USER:www-data storage bootstrap/cache
+         composer install
+         php artisan key:generate
+         php artisan migrate --force
+         php artisan optimize
          chown -R $USER:$USER /var/www/api.keteban.com/
          chmod -R 755 /var/www
-         cd /var/www/api.keteban.com 
+         chmod -R 775 storage
+         chmod -R 775 bootstrap/cache
+          
          ./server_deploy.sh
