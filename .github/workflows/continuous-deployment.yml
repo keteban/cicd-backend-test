@@ -81,4 +81,4 @@ jobs:
         KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
          cd /var/www/api.keteban.com
-         php artisan migrate --force
+         php artisan migrate
