@@ -67,7 +67,6 @@ jobs:
          composer install
          php artisan optimize
          php artisan key:generate
-         php artisan migrate --force
 
   migrate:
     needs: deploy
